@@ -6,7 +6,6 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.contrib.fsm_storage.redis import RedisStorage2
 
 from tgbot.config import load_config
-from tgbot.filters.admin import AdminFilter
 from tgbot.handlers.survey import register_survey
 from tgbot.middlewares.environment import EnvironmentMiddleware
 
@@ -18,7 +17,7 @@ def register_all_middlewares(dp, config):
 
 
 def register_all_filters(dp):
-    dp.filters_factory.bind(AdminFilter)
+    pass
 
 
 def register_all_handlers(dp):
