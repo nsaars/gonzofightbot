@@ -54,7 +54,7 @@ async def start_handler(message: types.Message, state: FSMContext):
 async def full_name_handler(message: types.Message, state: FSMContext):
     answer = message.text.strip()
     await state.update_data(full_name=answer)
-    await FormStates.PHOTO.set()
+    await FormStates.DATE_OF_BIRTH.set()
     await message.answer(questions[1])
 
 
