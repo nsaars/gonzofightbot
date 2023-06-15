@@ -61,7 +61,7 @@ async def full_name_handler(message: types.Message, state: FSMContext):
 async def date_of_birth_handler(message: types.Message, state: FSMContext):
     answer = message.text.strip()
     if not re.match(date_regex, answer):
-        await message.reply("Invalid date format.")
+        await message.reply("Недопустимый формат даты. Отправьте в формате 11.11.1111")
         return
     await state.update_data(date_of_birth=answer)
     await FormStates.WEIGHT.set()
@@ -127,7 +127,7 @@ async def instagram_handler(message: types.Message, state: FSMContext):
 async def phone_number_handler(message: types.Message, state: FSMContext):
     answer = message.text.strip()
     if not re.match(phone_number_regex, answer):
-        await message.reply("Invalid phone number format.")
+        await message.reply("Неверный формат телефонного номера. Отправьте в формате +998991234567")
         return
     await state.update_data(phone_number=answer)
     await FormStates.LAST_FIGHT_DATE.set()
@@ -136,15 +136,13 @@ async def phone_number_handler(message: types.Message, state: FSMContext):
 
 async def last_fight_date_handler(message: types.Message, state: FSMContext):
     answer = message.text.strip()
-    if not re.match(date_regex, answer):
-        await message.reply("Invalid date format.")
-        return
     await state.update_data(last_fight_date=answer)
     await FormStates.PHOTO.set()
     await message.answer(questions[12])
 
 
 async def photo_handler(message: types.Message, state: FSMContext):
+    print(message.content_type, message.photo, message.video)
     answer = f"Photo: {message.photo[-1].file_id}"
     await state.update_data(photo=answer)
     await FormStates.SHADOW_FIGHT_VIDEO.set()
@@ -202,8 +200,6 @@ def register_survey(dp: Dispatcher):
     dp.register_message_handler(instagram_handler, state=FormStates.INSTAGRAM)
     dp.register_message_handler(phone_number_handler, state=FormStates.PHONE_NUMBER)
     dp.register_message_handler(last_fight_date_handler, state=FormStates.LAST_FIGHT_DATE)
-    dp.register_message_handler(photo_handler, state=FormStates.PHOTO, content_types=types.ContentTypes.PHOTO)
-    dp.register_message_handler(shadow_fight_video_handler, state=FormStates.SHADOW_FIGHT_VIDEO,
-                                content_types=types.ContentTypes.VIDEO)
-    dp.register_message_handler(funny_story_video_handler, state=FormStates.FUNNY_STORY_VIDEO,
-                                content_types=types.ContentTypes.VIDEO)
+    dp.register_message_handler(photo_handler, state=FormStates.PHOTO)
+    dp.register_message_handler(shadow_fight_video_handler, state=FormStates.SHADOW_FIGHT_VIDEO)
+    dp.register_message_handler(funny_story_video_handler, state=FormStates.FUNNY_STORY_VIDEO)
