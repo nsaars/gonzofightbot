@@ -16,7 +16,7 @@ questions = [
     "Напишите, кем вы работаете или на кого учитесь:",
     "Укажите свой логин в Instagram:",
     "Напишите свой номер телефона (+998991234567):",
-    "Когда был последний бой (11.11.1111)?:",
+    "Когда был последний бой?:",
     "Отправьте свое фото:",
     "Отправьте видео 'Бой с тенью':",
     "Пришлите свой видеоклип, в котором вы рассказываете забавную историю, которая произошла с вами:"
@@ -142,7 +142,6 @@ async def last_fight_date_handler(message: types.Message, state: FSMContext):
 
 
 async def photo_handler(message: types.Message, state: FSMContext):
-    print(message.content_type, message.photo, message.video)
     answer = f"Photo: {message.photo[-1].file_id}"
     await state.update_data(photo=answer)
     await FormStates.SHADOW_FIGHT_VIDEO.set()
@@ -182,7 +181,8 @@ async def submit_form(message, state):
                 media_group.append(types.InputMediaVideo(*args))
         else:
             message_text += f"{i}. {data[d]}\n"
-    await bot.send_media_group(chat_id=bot['config'].tg_bot.admin_ids[0], media=media_group)
+    for admin in bot['config'].tg_bot.admin_ids:
+        await bot.send_media_group(chat_id=admin, media=media_group)
     await state.finish()
 
 
@@ -200,6 +200,6 @@ def register_survey(dp: Dispatcher):
     dp.register_message_handler(instagram_handler, state=FormStates.INSTAGRAM)
     dp.register_message_handler(phone_number_handler, state=FormStates.PHONE_NUMBER)
     dp.register_message_handler(last_fight_date_handler, state=FormStates.LAST_FIGHT_DATE)
-    dp.register_message_handler(photo_handler, state=FormStates.PHOTO)
-    dp.register_message_handler(shadow_fight_video_handler, state=FormStates.SHADOW_FIGHT_VIDEO)
-    dp.register_message_handler(funny_story_video_handler, state=FormStates.FUNNY_STORY_VIDEO)
+    dp.register_message_handler(photo_handler, state=FormStates.PHOTO, content_types=types.ContentTypes.PHOTO)
+    dp.register_message_handler(shadow_fight_video_handler, state=FormStates.SHADOW_FIGHT_VIDEO, content_types=types.ContentTypes.VIDEO)
+    dp.register_message_handler(funny_story_video_handler, state=FormStates.FUNNY_STORY_VIDEO, content_types=types.ContentTypes.VIDEO)
