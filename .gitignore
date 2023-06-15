@@ -1,5 +1,4 @@
 .idea/
-.env
 systemd/
 Dockerfile
 docker-compose.yml
