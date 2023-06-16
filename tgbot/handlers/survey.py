@@ -4,7 +4,7 @@ from aiogram import types
 from aiogram.dispatcher import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from tgbot.keyboards.reply import start
+from tgbot.keyboards.reply import start,share_contact
 from aiogram.types import ReplyKeyboardRemove
 
 questions = [
@@ -137,17 +137,22 @@ async def instagram_handler(message: types.Message, state: FSMContext):
     answer = message.text.strip()
     await state.update_data(instagram=answer)
     await FormStates.PHONE_NUMBER.set()
-    await message.answer(questions[10])
+    await message.answer(questions[10], reply_markup=share_contact)
 
 
 async def phone_number_handler(message: types.Message, state: FSMContext):
-    answer = message.text.strip()
-    if not re.match(phone_number_regex, answer):
-        await message.reply("Неверный формат телефонного номера. Отправьте в формате +998991234567")
-        return
+    answer = ''
+    if message.content_type == "text":
+        answer = message.text.strip()
+        if not re.match(phone_number_regex, answer):
+            await message.reply("Неверный формат телефонного номера. Отправьте в формате +998991234567")
+            return
+    elif message.content_type == "contact":
+        answer = message.contact.phone_number
+
     await state.update_data(phone_number=answer)
     await FormStates.LAST_FIGHT_DATE.set()
-    await message.answer(questions[11])
+    await message.answer(questions[11], reply_markup=ReplyKeyboardRemove())
 
 
 async def last_fight_date_handler(message: types.Message, state: FSMContext):
@@ -198,7 +203,7 @@ async def shadow_fight_video_handler(message: types.Message, state: FSMContext):
 
 async def funny_story_video_handler(message: types.Message, state: FSMContext):
     response = random.choice(
-        ["Во первых, это не видео, а во вторых, это не смешно.",
+        ["Во первых, это не видео, а во вторых, это несмешно.",
          "Siz bilan sodir bo'lgan kulgili voqeani aytib beradigan videoklipingizni yuboring", "Это не видео."])
     if await wrong_format(message, response):
         return
@@ -245,7 +250,7 @@ def register_survey(dp: Dispatcher):
     dp.register_message_handler(passion_handler, state=FormStates.PASSION)
     dp.register_message_handler(work_or_study_handler, state=FormStates.WORK_OR_STUDY)
     dp.register_message_handler(instagram_handler, state=FormStates.INSTAGRAM)
-    dp.register_message_handler(phone_number_handler, state=FormStates.PHONE_NUMBER)
+    dp.register_message_handler(phone_number_handler, state=FormStates.PHONE_NUMBER, content_types=["text", "contact"])
     dp.register_message_handler(last_fight_date_handler, state=FormStates.LAST_FIGHT_DATE)
     dp.register_message_handler(photo_handler, state=FormStates.PHOTO, content_types=types.ContentTypes.ANY)
     dp.register_message_handler(shadow_fight_video_handler, state=FormStates.SHADOW_FIGHT_VIDEO,
