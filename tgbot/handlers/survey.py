@@ -1,34 +1,38 @@
+import random
 import re
 from aiogram import types
 from aiogram.dispatcher import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
+from tgbot.keyboards.reply import start
+from aiogram.types import ReplyKeyboardRemove
 
 questions = [
-    "Напишите свое полное имя:",
-    "Дата рождения (11.11.1111):",
-    "Какой у вас вес (в кг)?:",
-    "Какой у вас рост (в см)?:",
-    "В каком городе вы сейчас живете?:",
-    "Кто вы по национальности?:",
-    "Подробно опишите свои спортивные регалии:",
-    "Чем вы увлечены в жизни?:",
-    "Напишите, кем вы работаете или на кого учитесь:",
-    "Укажите свой логин в Instagram:",
-    "Напишите свой номер телефона (+998991234567):",
-    "Когда был последний бой?:",
-    "Отправьте свое фото:",
-    "Отправьте видео 'Бой с тенью':",
-    "Пришлите свой видеоклип, в котором вы рассказываете забавную историю, которая произошла с вами:"
+    "Напишите свое полное имя",
+    "Дата рождения (11.11.1111)",
+    "Какой у вас вес (в кг)?",
+    "Какой у вас рост (в см)?",
+    "В каком городе вы сейчас живете?",
+    "Кто вы по национальности?",
+    "Подробно опишите свои спортивные регалии",
+    "Чем вы увлечены в жизни?",
+    "Напишите, кем вы работаете или на кого учитесь",
+    "Укажите свой логин в Instagram",
+    "Напишите свой номер телефона (+998991234567)",
+    "Когда был последний бой?",
+    "Отправьте свое фото",
+    "Отправьте видео 'Бой с тенью'",
+    "Пришлите свой видеоклип, в котором вы рассказываете забавную историю, которая произошла с вами"
 ]
 
 date_regex = re.compile(
     r"(\b(0?[1-9]|[12]\d|30|31)[^\w\d\r\n:](0?[1-9]|1[0-2])[^\w\d\r\n:](\d{4}|\d{2})\b)|(\b(0?[1-9]|1[0-2])[^\w\d\r\n:](0?[1-9]|[12]\d|30|31)[^\w\d\r\n:](\d{4}|\d{2})\b)")
 
-phone_number_regex = re.compile(r"^(\+?998-?)?\d{2}-?\d{3}-?\d{2}-?\d{2}$")
+phone_number_regex = re.compile(r"^(\+?\d{1,3}-?)?\d{2,3}-?\d{3}-?\d{2}-?\d{2}$")
 
 
 class FormStates(StatesGroup):
+    START_SURVEY = State()
     FULL_NAME = State()
     DATE_OF_BIRTH = State()
     WEIGHT = State()
@@ -47,8 +51,20 @@ class FormStates(StatesGroup):
 
 
 async def start_handler(message: types.Message, state: FSMContext):
-    await FormStates.FULL_NAME.set()
-    await message.answer(questions[0])
+    await FormStates.START_SURVEY.set()
+    await message.answer("Привет! Это GonzoFight bot. Здесь ты можешь оставить свою заявку на участие в следующем "
+                         "карде.", reply_markup=start)
+    await message.answer("Тебе нужно будет заполнить анкету. Всего у тебя будет 15 вопросов. В зависимости от "
+                         "твоих ответов мы будем решать будем ли мы с тобой сотрудничать или нет.")
+
+
+async def start_survey(message: types.Message, state: FSMContext):
+    response = random.choice(["Если готов, напиши 'Поехали' !", "Напиши 'Поехали'", "Нажми на 'Поехали'."])
+    if message.text == "Поехали":
+        await FormStates.FULL_NAME.set()
+        await message.answer(questions[0], reply_markup=ReplyKeyboardRemove())
+    else:
+        await message.answer(response)
 
 
 async def full_name_handler(message: types.Message, state: FSMContext):
@@ -142,13 +158,38 @@ async def last_fight_date_handler(message: types.Message, state: FSMContext):
 
 
 async def photo_handler(message: types.Message, state: FSMContext):
+    response = random.choice(["Очень интересно, но я фото просил.", "Suratingizni yuboring, birodar.", "Это не фото."])
+    if message.content_type == "document":
+        await message.reply(f"Формат файла не подходит.")
+        return
+    elif message.content_type != "photo":
+        await message.reply(response)
+        return
+
     answer = f"Photo: {message.photo[-1].file_id}"
     await state.update_data(photo=answer)
     await FormStates.SHADOW_FIGHT_VIDEO.set()
     await message.answer(questions[13])
 
 
+async def wrong_format(message: types.Message, response: str):
+    if message.content_type == "document":
+        await message.reply(f"Формат файла не подходит.")
+        return True
+    elif message.content_type == "video_note":
+        await message.reply("Дружище, видеокружок не подходит, у нас серьёзная организация.")
+        return True
+    elif message.content_type != "video":
+        await message.reply(response)
+        return True
+    return False
+
+
 async def shadow_fight_video_handler(message: types.Message, state: FSMContext):
+    response = random.choice(
+        ["Видео это когда картинки двигаются.", "Videoni yuboring 'Soya bilan jang'", "Это не видео."])
+    if await wrong_format(message, response):
+        return
     answer = f"Video: {message.video.file_id}"
     await state.update_data(shadow_fight_video=answer)
     await FormStates.FUNNY_STORY_VIDEO.set()
@@ -156,6 +197,11 @@ async def shadow_fight_video_handler(message: types.Message, state: FSMContext):
 
 
 async def funny_story_video_handler(message: types.Message, state: FSMContext):
+    response = random.choice(
+        ["Во первых, это не видео, а во вторых, это не смешно.",
+         "Siz bilan sodir bo'lgan kulgili voqeani aytib beradigan videoklipingizni yuboring", "Это не видео."])
+    if await wrong_format(message, response):
+        return
     answer = f"Video: {message.video.file_id}"
     await state.update_data(funny_story_video=answer)
     await message.answer(f"{message.from_user.full_name}, вы закончили регистрацию. Ожидайте, с вами свяжутся.")
@@ -188,6 +234,7 @@ async def submit_form(message, state):
 
 def register_survey(dp: Dispatcher):
     dp.register_message_handler(start_handler, commands=['start'], state="*")
+    dp.register_message_handler(start_survey, state=FormStates.START_SURVEY)
     dp.register_message_handler(full_name_handler, state=FormStates.FULL_NAME)
     dp.register_message_handler(date_of_birth_handler, state=FormStates.DATE_OF_BIRTH)
     dp.register_message_handler(weight_handler, state=FormStates.WEIGHT)
@@ -200,6 +247,8 @@ def register_survey(dp: Dispatcher):
     dp.register_message_handler(instagram_handler, state=FormStates.INSTAGRAM)
     dp.register_message_handler(phone_number_handler, state=FormStates.PHONE_NUMBER)
     dp.register_message_handler(last_fight_date_handler, state=FormStates.LAST_FIGHT_DATE)
-    dp.register_message_handler(photo_handler, state=FormStates.PHOTO, content_types=types.ContentTypes.PHOTO)
-    dp.register_message_handler(shadow_fight_video_handler, state=FormStates.SHADOW_FIGHT_VIDEO, content_types=types.ContentTypes.VIDEO)
-    dp.register_message_handler(funny_story_video_handler, state=FormStates.FUNNY_STORY_VIDEO, content_types=types.ContentTypes.VIDEO)
+    dp.register_message_handler(photo_handler, state=FormStates.PHOTO, content_types=types.ContentTypes.ANY)
+    dp.register_message_handler(shadow_fight_video_handler, state=FormStates.SHADOW_FIGHT_VIDEO,
+                                content_types=types.ContentTypes.ANY)
+    dp.register_message_handler(funny_story_video_handler, state=FormStates.FUNNY_STORY_VIDEO,
+                                content_types=types.ContentTypes.ANY)
