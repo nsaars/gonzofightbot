@@ -305,7 +305,7 @@ async def submit_form(message, state):
 async def send_form(message: types.Message, state: FSMContext):
     data = await state.get_data()
     if message.text == "Отправить":
-        await message.answer(f"{message.from_user.full_name}, вы закончили регистрацию. Ожидайте, с вами свяжутся.")
+        await message.answer(f"{message.from_user.full_name}, вы закончили регистрацию. Ожидайте, с вами свяжутся.", reply_markup=ReplyKeyboardRemove())
 
         for admin in message.bot['config'].tg_bot.admin_ids:
             await message.bot.send_media_group(chat_id=admin, media=data["media_group"])
