@@ -3,7 +3,7 @@ import re
 from aiogram import types
 from aiogram.dispatcher import Dispatcher
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
+from ..misc.states import FormStates
 from tgbot.keyboards.reply import start, share_contact, step_back, submit
 from aiogram.types import ReplyKeyboardRemove
 
@@ -31,27 +31,7 @@ date_regex = re.compile(
 phone_number_regex = re.compile(r"^(\+?\d{1,3}-?)?\d{2,3}-?\d{3}-?\d{2}-?\d{2}$")
 
 
-class FormStates(StatesGroup):
-    START_SURVEY = State()
-    FULL_NAME = State()
-    DATE_OF_BIRTH = State()
-    WEIGHT = State()
-    HEIGHT = State()
-    CITY = State()
-    NATIONALITY = State()
-    REGALIA = State()
-    PASSION = State()
-    WORK_OR_STUDY = State()
-    INSTAGRAM = State()
-    PHONE_NUMBER = State()
-    LAST_FIGHT_DATE = State()
-    PHOTO = State()
-    SHADOW_FIGHT_VIDEO = State()
-    FUNNY_STORY_VIDEO = State()
-    SUBMIT_FORM = State()
-
-
-async def start_handler(message: types.Message, state: FSMContext):
+async def start_handler(message: types.Message):
     if int(message.chat.id) < 0:
         await message.answer("Эту команду нельзя использовать в групповом чате.")
     await FormStates.START_SURVEY.set()
@@ -66,7 +46,7 @@ GonzoFight полностью бесплатное и происходит то�
 Покажите ее в анкете и скорее всего вы будете выступать на GonzoFight""", reply_markup=start)
 
 
-async def start_survey(message: types.Message, state: FSMContext):
+async def start_survey(message: types.Message):
     response = random.choice(["Если готов, напиши 'Поехали' !", "Напиши 'Поехали'", "Нажми на 'Поехали'."])
     if message.text == "Поехали":
         await FormStates.FULL_NAME.set()
@@ -82,7 +62,7 @@ async def full_name_handler(message: types.Message, state: FSMContext):
     await message.answer(questions[1], reply_markup=step_back)
 
 
-async def date_of_birth_handler(message: types.Message, state: FSMContext):
+async def date_of_birth_handler(message: types.Message, state: FSMContext, order=2):
     if message.text == "Назад":
         await FormStates.FULL_NAME.set()
         await message.answer(questions[0], reply_markup=ReplyKeyboardRemove())
@@ -194,7 +174,7 @@ async def phone_number_handler(message: types.Message, state: FSMContext):
     if message.content_type == "text":
         answer = message.text.strip()
         if not re.match(phone_number_regex, answer):
-            await message.reply("Неверный формат телефонного номера. Отправьте в формате +998991234567")
+            await message.reply("Неверный формат телефонного номера. Отправьте в формате +998901234567")
             return
     elif message.content_type == "contact":
         answer = message.contact.phone_number
@@ -284,7 +264,6 @@ async def funny_story_video_handler(message: types.Message, state: FSMContext):
 
 async def submit_form(message, state):
     data = await state.get_data()
-    print(data)
     message_text = f"username: {message.from_user.username}\n"
     media_group = []
     regex = r"^(Photo|Video):(.+)$"
@@ -310,11 +289,12 @@ async def submit_form(message, state):
 async def send_form(message: types.Message, state: FSMContext):
     data = await state.get_data()
     if message.text == "Отправить":
-        await message.answer(f"{message.from_user.full_name}, вы закончили регистрацию. Ожидайте, с вами свяжутся.", reply_markup=ReplyKeyboardRemove())
+        await message.answer(f"{message.from_user.full_name}, вы закончили регистрацию. Ожидайте, с вами свяжутся.",
+                             reply_markup=ReplyKeyboardRemove())
 
         for admin in message.bot['config'].tg_bot.admin_ids:
             await message.bot.send_media_group(chat_id=admin, media=data["media_group"])
-        await state.finish()
+        await state.reset_state(with_data=True)
     elif message.text == "Заполнить заново":
         await FormStates.FULL_NAME.set()
         await message.answer(questions[0], reply_markup=ReplyKeyboardRemove())
