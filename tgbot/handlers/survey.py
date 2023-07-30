@@ -188,7 +188,7 @@ async def instagram_handler(message: types.Message, state: FSMContext):
 async def phone_number_handler(message: types.Message, state: FSMContext):
     if message.text == "Назад":
         await FormStates.INSTAGRAM.set()
-        await message.answer(questions[9])
+        await message.answer(questions[9], reply_markup=step_back)
         return
     answer = ''
     if message.content_type == "text":
