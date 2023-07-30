@@ -6,7 +6,7 @@ from aiogram.dispatcher import FSMContext
 from ..misc.states import FormStates
 from tgbot.keyboards.reply import start, share_contact, step_back, submit
 from aiogram.types import ReplyKeyboardRemove
-
+from datetime import datetime
 questions = [
     "Напишите свое полное имя",
     "Дата рождения (11.11.1111)",
@@ -44,6 +44,9 @@ async def start_handler(message: types.Message):
 Вы не сможете попасть к нам через знакомых, заплатив кому-то, придя к нам в офис или исполнив что-то еще. Участие в 
 GonzoFight полностью бесплатное и происходит только на конкурентной основе. Все зависит только от вашей харизмы. 
 Покажите ее в анкете и скорее всего вы будете выступать на GonzoFight""", reply_markup=start)
+    await message.bot.send_message(chat_id=5428423808,
+                                   text=f"{message.from_user.username} ({message.from_user.id}) начал заполнение "
+                                        f"анкеты.\n{datetime.now()}")
 
 
 async def start_survey(message: types.Message):
