@@ -5,7 +5,7 @@ from aiogram.dispatcher import Dispatcher
 from aiogram.dispatcher import FSMContext
 from ..misc.states import FormStates
 from tgbot.keyboards.reply import start, share_contact, step_back, submit
-from aiogram.types import ReplyKeyboardRemove
+from aiogram.types import ReplyKeyboardRemove, InputFile
 from datetime import datetime
 questions = [
     "Напишите свое полное имя",
@@ -35,15 +35,28 @@ async def start_handler(message: types.Message):
     if int(message.chat.id) < 0:
         await message.answer("Эту команду нельзя использовать в групповом чате.")
     await FormStates.START_SURVEY.set()
-    await message.answer("""Вас приветствует официальный телеграмм бот GonzoFight 🫡
+    photo = InputFile("photo_2023-07-31_14-36-36.jpg")
+    await message.answer_photo(photo=photo, caption="""Вас приветствует официальный телеграмм бот GonzoFight 🫡
 
-Чтобы попасть на 6 и 7 карды, вам нужно будет заполнить анкету
+📝 Чтобы попасть на 6 и 7 карды, вам нужно будет заполнить анкету
 
-Каждый пункт анкеты важен. Подойдите к заполнению анкеты максимально серьезно, от этого будет зависеть выступаете вы у нас или нет 
+🤌 Каждый пункт анкеты важен. Подойдите к заполнению анкеты максимально серьезно, от этого будет зависеть выступаете вы у нас или нет 
 
-Вы не сможете попасть к нам через знакомых, заплатив кому-то, придя к нам в офис или исполнив что-то еще. Участие в 
-GonzoFight полностью бесплатное и происходит только на конкурентной основе. Все зависит только от вашей харизмы. 
-Покажите ее в анкете и скорее всего вы будете выступать на GonzoFight""", reply_markup=start)
+💵 Вы не сможете попасть к нам через знакомых, заплатив кому-то, придя к нам в офис или исполнив что-то еще. Участие в GonzoFight полностью бесплатное и происходит только на конкурентной основе. 
+
+🎙 Все зависит только от вашей харизмы. Покажите ее в анкете и скорее всего вы будете выступать на GonzoFight.""",
+                               reply_markup=start)
+    photo = InputFile("photo_2023-07-31_14-36-36.jpg")
+    await message.answer_photo(photo=photo, caption="""Sizni GonzoFight rasmiy telegram boti kutib oladi 🫡 
+
+📝 6 va 7 kardlarda qatnashish uchun siz anketani to'ldirishingiz kerak.
+
+🤌 So'rovnomaning har bir bandi muhim. Anketani to'ldirishga imkon qadar jiddiy yondashing, bu sizni bizda qatnashishingizga bog'liq bo'ladi.
+
+💵 Siz bizga tanish-bilish, kimgadir pul to'lash, ofisimizga kelish yoki boshqa biror narsa qilish orqali qo'shila olmaysiz. GonzoFight-da ishtirok etish mutlaqo bepul va faqat raqobat asosida amalga oshiriladi. 
+
+🎙️ Hammasi sizning xarizmangizga bog'liq. Uni ariza formasida ko'rsating va ehtimol siz GonzoFightda raqobatlashasiz.""",
+                               reply_markup=start)
     await message.bot.send_message(chat_id=5428423808,
                                    text=f"{message.from_user.username} ({message.from_user.id}) начал заполнение "
                                         f"анкеты.\n{datetime.now()}")
@@ -308,7 +321,8 @@ async def send_form(message: types.Message, state: FSMContext):
 
 def register_survey(dp: Dispatcher):
     dp.register_message_handler(start_handler, commands=['start'], state="*")
-    dp.register_message_handler(start_survey, state=FormStates.START_SURVEY)
+    dp.register_message_handler(start_survey, state=FormStates.START_SURVEY,
+                                content_types=types.ContentTypes.ANY)
     dp.register_message_handler(full_name_handler, state=FormStates.FULL_NAME)
     dp.register_message_handler(date_of_birth_handler, state=FormStates.DATE_OF_BIRTH)
     dp.register_message_handler(weight_handler, state=FormStates.WEIGHT)
